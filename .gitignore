@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.env
+chromadb/
+uploads/
+*.db
+*.sqlite
+*.sqlite3
+.idea/
+.vscode/

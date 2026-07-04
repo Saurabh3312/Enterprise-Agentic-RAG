@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Enterprise Agentic RAG · Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/style.css" />
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">AR</div>
+      <div class="brand-text">
+        <div class="brand-title">Agentic RAG</div>
+        <div class="brand-sub">Control Room</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-route="dashboard">
+        <span class="nav-icon">◆</span><span>Dashboard</span>
+      </button>
+      <button class="nav-item" data-route="chat">
+        <span class="nav-icon">▸</span><span>Agent Chat</span>
+      </button>
+      <button class="nav-item" data-route="documents">
+        <span class="nav-icon">▤</span><span>Documents</span>
+      </button>
+      <button class="nav-item" data-route="analytics">
+        <span class="nav-icon">▥</span><span>Analytics</span>
+      </button>
+      <button class="nav-item" data-route="settings">
+        <span class="nav-icon">⚙</span><span>Settings</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="status-row">
+        <span class="pulse-dot"></span>
+        <span id="backend-status">Connecting…</span>
+      </div>
+      <div class="version-tag">v4.0.0 · Hybrid Agentic Pipeline</div>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="topbar-title" id="page-title">Dashboard</div>
+        <div class="topbar-sub" id="page-sub">Real-time knowledge platform overview</div>
+      </div>
+      <div class="topbar-right">
+        <div class="model-chip" id="model-chip-llm">⌬ llama3.2:3b</div>
+        <div class="model-chip">⬡ MiniLM-L6-v2</div>
+      </div>
+    </header>
+
+    <section class="page-content" id="page-content">
+      <!-- injected per-route -->
+    </section>
+  </main>
+</div>
+
+<template id="tpl-dashboard">
+  <div class="grid-kpi" id="kpi-grid"></div>
+
+  <div class="grid-2col">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Query volume</h3>
+        <span class="panel-tag">last 14 days</span>
+      </div>
+      <canvas id="chart-volume" height="220"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Confidence trend</h3>
+        <span class="panel-tag">agent self-grading</span>
+      </div>
+      <canvas id="chart-confidence" height="220"></canvas>
+    </div>
+  </div>
+
+  <div class="grid-2col">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Knowledge base composition</h3>
+        <span class="panel-tag">chunks per document</span>
+      </div>
+      <canvas id="chart-docs" height="220"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Recent agent activity</h3>
+        <span class="panel-tag">live feed</span>
+      </div>
+      <div class="activity-list" id="activity-list"></div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-chat">
+  <div class="chat-layout">
+    <div class="chat-sessions panel">
+      <div class="panel-head"><h3>History</h3><span class="panel-tag" id="session-count-tag"></span></div>
+      <button class="btn-primary full-width" id="new-session-btn">+ New conversation</button>
+      <input type="text" id="session-search" class="session-search" placeholder="Search past conversations…" autocomplete="off" />
+      <div class="session-list" id="session-list"></div>
+    </div>
+
+    <div class="chat-main panel">
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-empty">
+          <div class="chat-empty-mark">◆</div>
+          <h3>Ask your knowledge base</h3>
+          <p>The agent plans sub-questions, retrieves with hybrid search, grades its own confidence, and refines before answering.</p>
+        </div>
+      </div>
+
+      <div class="agent-trace-bar" id="agent-trace-bar" hidden></div>
+
+      <form class="chat-input-row" id="chat-form">
+        <input type="text" id="chat-input" placeholder="Ask a question about your documents…" autocomplete="off" />
+        <button type="submit" class="btn-primary">Send</button>
+      </form>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-documents">
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Document Center</h3>
+      <span class="panel-tag">Upload, chunk, embed, index</span>
+    </div>
+
+    <div class="dropzone" id="dropzone">
+      <div class="dropzone-mark">⇪</div>
+      <div><strong>Drop PDF, DOCX, TXT or MD files here</strong> or click to browse</div>
+      <input type="file" id="file-input" accept=".pdf,.docx,.txt,.md" multiple hidden />
+    </div>
+
+    <div class="url-ingest-row">
+      <span class="url-ingest-icon">🔗</span>
+      <input type="text" id="url-input" placeholder="…or paste a URL to ingest a web page" autocomplete="off" />
+      <button class="btn-secondary" id="url-ingest-btn">Ingest URL</button>
+    </div>
+
+    <div id="upload-progress-list"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Indexed documents</h3>
+      <span class="panel-tag" id="doc-count-tag">0 documents</span>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Document</th><th>Type</th><th>Pages</th><th>Chunks</th><th>Size</th><th>Status</th><th>Uploaded</th><th></th></tr>
+      </thead>
+      <tbody id="documents-tbody"></tbody>
+    </table>
+  </div>
+</template>
+
+<template id="tpl-analytics">
+  <div class="grid-kpi" id="analytics-kpi-grid"></div>
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Response time &amp; confidence over time</h3>
+      <span class="panel-tag">aggregated by day</span>
+    </div>
+    <canvas id="chart-analytics-main" height="260"></canvas>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Query log</h3>
+      <span class="panel-tag">most recent</span>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Question</th><th>Confidence</th><th>Hops</th><th>Time</th><th>When</th></tr>
+      </thead>
+      <tbody id="querylog-tbody"></tbody>
+    </table>
+  </div>
+</template>
+
+<template id="tpl-settings">
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Live pipeline settings</h3>
+      <span class="panel-tag">admin panel · applies instantly, no restart</span>
+    </div>
+    <div class="settings-form" id="settings-form"></div>
+    <div class="settings-actions">
+      <button class="btn-primary" id="settings-save-btn">Save changes</button>
+      <button class="btn-secondary" id="settings-reset-btn">Reset to defaults</button>
+      <span class="settings-toast" id="settings-toast"></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Fixed configuration</h3><span class="panel-tag">read-only · edit app/config.py + redeploy</span></div>
+    <div class="config-grid" id="config-grid"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>About this platform</h3></div>
+    <p class="muted-text">
+      Enterprise Agentic RAG Platform — a hybrid retrieval (vector + BM25 + cross-encoder reranking)
+      pipeline wrapped in an agentic loop that plans sub-questions, self-grades retrieved context,
+      and refines its search before answering. Built with FastAPI, ChromaDB, SQLAlchemy and Ollama.
+    </p>
+  </div>
+</template>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="/assets/js/app.js"></script>
+</body>
+</html>

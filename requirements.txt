@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+chromadb
+sentence-transformers
+pymupdf
+python-multipart
+requests
+sqlalchemy
+rank-bm25
+pydantic
+python-docx
+beautifulsoup4
+lxml
